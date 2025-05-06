@@ -1,88 +1,77 @@
-const express = require('express'),
-    bodyParser = require('body-parser'),
-    // In order to use PUT HTTP verb to edit item
-    methodOverride = require('method-override'),
-    // Mitigate XSS using sanitizer
-    sanitizer = require('sanitizer'),
-    app = express(),
-    port = 8000
+import React, { useState } from 'react';
 
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
-// https: //github.com/expressjs/method-override#custom-logic
-app.use(methodOverride(function (req, res) {
-    if (req.body && typeof req.body === 'object' && '_method' in req.body) {
-        // look in urlencoded POST bodies and delete it
-        let method = req.body._method;
-        delete req.body._method;
-        return method
-    }
-}));
+const initialEmployees = [
+  { id: 1, name: 'John Doe', role: 'Frontend Developer', department: 'Engineering', email: 'john@example.com' },
+  { id: 2, name: 'Jane Smith', role: 'UI/UX Designer', department: 'Design', email: 'jane@example.com' },
+  { id: 3, name: 'Michael Lee', role: 'Backend Developer', department: 'Engineering', email: 'michael@example.com' },
+  { id: 4, name: 'Emily Johnson', role: 'HR Manager', department: 'Human Resources', email: 'emily@example.com' },
+];
 
+function App() {
+  const [employees, setEmployees] = useState(initialEmployees);
+  const [search, setSearch] = useState('');
 
-let todolist = [];
+  const filteredEmployees = employees.filter((emp) =>
+    emp.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-/* The to do list and the form are displayed */
-app.get('/todo', function (req, res) {
-        res.render('todo.ejs', {
-            todolist,
-            clickHandler: "func1();"
-        });
-    })
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.header}>Employee Directory</h1>
 
-    /* Adding an item to the to do list */
-    .post('/todo/add/', function (req, res) {
-        // Escapes HTML special characters in attribute values as HTML entities
-        let newTodo = sanitizer.escape(req.body.newtodo);
-        if (req.body.newtodo != '') {
-            todolist.push(newTodo);
-        }
-        res.redirect('/todo');
-    })
+      <input
+        type="text"
+        placeholder="Search by name..."
+        style={styles.input}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-    /* Deletes an item from the to do list */
-    .get('/todo/delete/:id', function (req, res) {
-        if (req.params.id != '') {
-            todolist.splice(req.params.id, 1);
-        }
-        res.redirect('/todo');
-    })
+      <div style={styles.list}>
+        {filteredEmployees.length > 0 ? (
+          filteredEmployees.map((employee) => (
+            <div key={employee.id} style={styles.card}>
+              <h3>{employee.name}</h3>
+              <p><strong>Role:</strong> {employee.role}</p>
+              <p><strong>Department:</strong> {employee.department}</p>
+              <p><strong>Email:</strong> {employee.email}</p>
+            </div>
+          ))
+        ) : (
+          <p>No employees found.</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
-    // Get a single todo item and render edit page
-    .get('/todo/:id', function (req, res) {
-        let todoIdx = req.params.id;
-        let todo = todolist[todoIdx];
+const styles = {
+  container: {
+    fontFamily: 'Arial, sans-serif',
+    padding: '2rem',
+    maxWidth: '800px',
+    margin: '0 auto',
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+  },
+  input: {
+    width: '100%',
+    padding: '0.5rem',
+    marginBottom: '1.5rem',
+    fontSize: '1rem',
+  },
+  list: {
+    display: 'grid',
+    gap: '1rem',
+  },
+  card: {
+    border: '1px solid #ccc',
+    padding: '1rem',
+    borderRadius: '8px',
+    backgroundColor: '#f9f9f9',
+  },
+};
 
-        if (todo) {
-            res.render('edititem.ejs', {
-                todoIdx,
-                todo,
-                clickHandler: "func1();"
-            });
-        } else {
-            res.redirect('/todo');
-        }
-    })
-
-    // Edit item in the todo list 
-    .put('/todo/edit/:id', function (req, res) {
-        let todoIdx = req.params.id;
-        // Escapes HTML special characters in attribute values as HTML entities
-        let editTodo = sanitizer.escape(req.body.editTodo);
-        if (todoIdx != '' && editTodo != '') {
-            todolist[todoIdx] = editTodo;
-        }
-        res.redirect('/todo');
-    })
-    /* Redirects to the to do list if the page requested is not found */
-    .use(function (req, res, next) {
-        res.redirect('/todo');
-    })
-
-    .listen(port, function () {
-        // Logging to console
-        console.log(`Todolist running on http://0.0.0.0:${port}`)
-    });
-// Export app
-module.exports = app;
+export default App;
