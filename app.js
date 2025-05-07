@@ -30,7 +30,7 @@ app.get('/todo', function (req, res) {
             clickHandler: "func1();"
         });
     })
-
+#nothing
     /* Adding an item to the to do list */
     .post('/todo/add/', function (req, res) {
         // Escapes HTML special characters in attribute values as HTML entities
